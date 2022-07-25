@@ -56,7 +56,9 @@ func (conf *RTSPConfig) OnDescribe(ctx *gortsplib.ServerHandlerOnDescribeCtx) (*
 			StatusCode: base.StatusOK,
 		}, suber.stream, nil
 	} else {
-		return nil, nil, err
+		return &base.Response{
+			StatusCode: base.StatusNotFound,
+		}, suber.stream, nil
 	}
 }
 
@@ -109,7 +111,7 @@ func (conf *RTSPConfig) OnAnnounce(ctx *gortsplib.ServerHandlerOnAnnounceCtx) (*
 	} else {
 		return &base.Response{
 			StatusCode: base.StatusBadRequest,
-		}, err
+		}, nil
 	}
 	return &base.Response{
 		StatusCode: base.StatusOK,
@@ -120,7 +122,9 @@ func (conf *RTSPConfig) OnPacketRTP(ctx *gortsplib.ServerHandlerOnPacketRTPCtx) 
 	if p, ok := conf.Load(ctx.Session); ok {
 		switch v := p.(type) {
 		case *RTSPPublisher:
-			v.Tracks[ctx.TrackID].WriteRTPPack(ctx.Packet)
+			if v.Tracks[ctx.TrackID] != nil {
+				v.Tracks[ctx.TrackID].WriteRTPPack(ctx.Packet)
+			}
 		}
 	}
 }
